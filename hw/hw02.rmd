@@ -1,0 +1,277 @@
+
+---
+title: "STAT340 HW2: Monte Carlo & Testing"
+author: Kai Tsuyoshi
+date: 2/21/2022
+output: html_document
+---
+<style>
+table{width:50%!important;margin-left:auto!important;margin-right:auto!important;}
+/*ol[style*="decimal"]>li{margin-top:40px!important;}*/
+</style>
+
+```{r setup, include=FALSE}
+# check packages installed
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(ggplot2)
+library(dplyr)
+library(ggplot2)
+
+knitr::opts_chunk$set(tidy=FALSE,strip.white=FALSE,fig.align="center",comment=" #")
+options(width=100)
+```
+
+<br/>
+
+## Instructions
+
+Complete the exercises, update the "author" and "date" fields in the header, knit it, and submit **both the HTML and RMD** files to Canvas. Due date: **Mar 4, 2022 at 11:59pm**.
+
+---
+
+## Exercise 1 (20 points): Generalized [birthday problem](https://en.wikipedia.org/wiki/Birthday_problem)
+
+The birthday problem asks for the probability that in a group of $n$ people, at least 2 people will share the same birthday. This is easy to solve, and the solution is easily found online.
+
+We can generalize this to a more difficult problem and solve it using a Monte Carlo approach: in $n$ people, what is the probability that at least $k$ people have the same birthday?
+
+Write a function `birthday(n,k,i)` that returns a probability estimate given 3 arguments:
+
+ - $n$ is the number of people in your sample
+    - for example, if `n=50` is used, we are asking "in 50 people, what is the probability that..."
+ - $k$ is minimum number of people that must share a birthday
+    - for example if `k=4` is used, we asking "...what is the probability that at least 4 people share the same birthday?
+ - $i$ is the number of iterations to run (default 1000)
+    - for example, if `i=1000` is used, your function should run 1000 simulations
+
+**Notes**:
+
+ - You may assume there are 365 possible dates (no leap years)
+ - You may assume birthdays are uniformly distributed across the calendar
+    - this is actually not true, see [this](https://www.panix.com/~murphy/bday.html), or [this](https://fivethirtyeight.com/features/lots-of-parents-dont-want-their-kids-to-be-born-on-leap-day/)
+ - You may assume the people are sampled [i.i.d](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
+
+**Hints**:
+
+ 1. There's no need to use actual dates in the simulation process. Numbers can represent dates and are easier to generate and manipulate in `R`. In particular, we recommend using the `sample()` function with the `x`, `size`, and `replace` arguments set appropriately. See the help page `?sample` for details.
+ 2. Given a vector of numbers, you can easily find duplicates by using the `table()` function. This will produce a named vector showing how many of each value there are. For example, running `table(c(1,3,5,5,7,9,9,9))` will show you there is one 1, one 3, two 5s, one 7, and three 9s.
+ 3. In your function, you will need to use a `for` loop to repeat the simulation `i` times. You will also need a variable outside your `for` loop to keep track of how many simulations satisfy that \# of birthdays $\geq k$.
+ 4. If your function is running correctly, then `birthday(n=23, k=2)`, `birthday(n=87, k=3)` and `birthday(n=188, k=4)` should all be approximately $50\%$.
+ 5. If your function is very slow, consider using the [`Table` function](https://rdrr.io/cran/Rfast/man/Table.html) from the Rfast package, which is 4-5 times faster than the normal `table()` function.
+
+```{r} 
+
+birthday = function(n,k,i=1000){
+  num_sim = rep(0,i)
+  for(loop in 1:i){
+    bdays = sample(1:365, size=n, replace = TRUE)
+    x = table(bdays)
+    if(any(x >= k)) {
+      num_sim[loop] = 1
+    }
+  }
+  return(mean(num_sim))
+}
+
+```
+
+This class currently has 162 enrolled students. What is the approximate probability that at least $4$ students have the same birthdays?
+
+> **0.354**
+
+---
+
+## Exercise 2 (15 points): Simulate RV
+
+$X$ is a random variable defined between $-\frac\pi2$ and $\frac\pi2$ by the probability density function $f(x)=\frac12\cos(x)$. Note this means the cumulative distribution function is $$F(x)=\int_{-\frac\pi2}^xf(x)dx=\frac12(\sin(x)+1)$$ Write a function `rx(n)` to sample from this random variable, where `n` is the size of the sample to be drawn. Then, use your function to draw a sample of 1000 and plot a histogram of the output.
+
+**Hint:** Remember the inverse function of $\sin(x)$ is $\arcsin(x)$, which in `R` is found by using the built in function `asin()`
+
+```{r,fig.width=4,fig.height=3}
+# defining pdf of X
+pdf_x = Vectorize(function(x){
+  if(x>-pi/2 & x<pi/2){cos(x)/2} else 0
+})
+
+# showing pdf on plot
+ggplot() + geom_function(fun=pdf_x,n=10001) + theme_minimal() + 
+  xlim(c(-2.5,2.5)) + ylim(-.5,1) + labs(x='x',y='f(x)')
+```
+
+```{r}
+# complete the function
+rx = function(n){
+  u = runif(n=n,0,1)
+  x = asin(2*u-1)
+  x
+}
+
+
+hist(rx(1000), main = "Histogram of function f(x)", xlab = "Distribution of n = 1000", ylab = "Frequency")
+```
+
+---
+
+## Exercise 3 (15 points): Testing coin flips
+
+In the six sequences below, **only one** of them is actually randomly generated from a fair coin. Use a combination of everything you know (common sense, monte carlo, hypothesis testing, etc.) to identify which is actually random and explain your reasoning.
+
+(***For full points***, conduct a formal test and report a $p$-value for each sequence. You may use a combination of multiple tests to arrive at your answer. If you cannot compute a $p$-value for each sequence, you can still earn a significant amount of partial credit by carefully explaining your reasoning and response as best as you can.)
+
+```{r}
+flips1 = "HTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHTHT"
+
+flips2 = "HHHTHTTTHHTHHTHHHTTTTHTHTHHTTHTHHHTHHTHTTTHTHHHTHTTTHTHTHHTHTHTTHTHHTHTHTTTHTHHHTHTHTTHTHTHHTHTHTHHHTHTTTHTHHTHTHTHHTTTHTHHTHHTTTTHTHTHHHTHTTHTHHTHTHTTHTHHTHTHHHTHHHTHTTTHTTHTTTHTHHHTHTHTTHTHHTHHTHTTT"
+
+flips3 = "HHTHTHTTTHTHHHTHHTTTHTHHTHTTTHTHTHHTHTHTTHTHHHHHHTTTHTHTHHTHTTTHTHHTHTHTTTHTHHHTTHTTTHTHTHHHHTHTTHHTTTTTHTHHHTHTHTTTTTHHHTHHTHHTHHHTTTTHTHTHHHTHHTTTTTHTHHHTHTHTHTTTHTHHHTHTHTHTTHTHHTHTHTHTTTTHTHHHTHTH"
+
+flips4 = "HTHHHHHHHTHTTHHTTHHHTHTHTTTHHTHHHTHHTTHTTTTTTTTTHTHHTTTTTHTHTHTHHTTHTTHTTTTTHHHTHTTTHTHTHHHTHTTTTHTHTHHTTHTHTTHHTHTHHHHTHTTHHTTHTTHTTHTHHHHHHTTTTTTHHHTTHTHHHHTTTHTTHHHTTHTHHTTTHHTHHTTTHTHHTHHHTHHTTHHH"
+
+flips5 = "HHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTTHHHHHHHHHHTTTTTTTTTT"
+
+flips6 = "TTHTTTHTTTTTTTHTHTHTHTTHTTHTHHTHHTTTHHTHTTTHTHHTHHHTHTTHHTHHTTHTHTTTTHTHTTTHHTTTTTTTTHTHHTTHTTTTTTHTHTHTHTTTHTTHHTTHTTTHHTTTHTTHTTTTHTTTTHHTTTHTHTHHHTTTTTTHTHHTTTTTTTTTTTTHHHTTTHHHTTTHTTTHTHTTHTTTTTHT"
+
+# you can use the function below to split the above sequences in vectors of flips
+split = function(str) strsplit(str, split="")[[1]]
+```
+
+Response goes here:
+
+To begin, a few flips can be eliminated based on purely observational methods, such as flip 1 and flip 5, as they follow a strict pattern all 200 coin flips. In this case, the p-value for either heads or tails is 0.5, as there are exactly the same number of heads and tails, which would prove that there is no difference in proportion, and indicate that the coin is very fair in the sense that it produces an equal amount of both successes (heads) and failures (tails), but are most certainly not random. 
+Thus, flips1 and flips5 are eliminated.
+
+flips2:
+```{r}
+#flip2
+flip2_head = sum(split(flips2) == "H")
+flip2_head/200 
+flip2_tail = sum(split(flips2) == "T")
+flip2_tail/200
+```
+We see that there are 102 heads and 98 tails, and thus, under the hypothesis test that the null is that the coin is exactly fair and heads and tail probabilities are the same, while the alternative is that the two are different, the standard error of two proportions can be applied, which yields a result of 0.05, and calculating a z score of 0.4 and returning a p value of 0.67. This accepts the null hypothesis, and thus indicates that flip2 is fair and random. 
+
+**However, we cannot use this because it is not normally distributed, and does not have central limit behavior**
+
+Thus, we take a different approach of longest continuous string of certain results, which is difficult to randomly generate without a truly random generator, and would be indicated by a string too short or too long. We can apply that concept in the following: 
+```{r}
+longestRun = function(flips){
+  # the first flip is always a run of length 1.
+  MaxRunSoFar = 1
+  currentRun = 1
+  
+  for(i in 2:length(flips)){ # for every flip
+    # if it is equal to the last flip
+    if(flips[i]==flips[i-1]){
+      # then increase the length of the currentRun
+      currentRun = currentRun + 1
+      # and if the run is larger than the maxRunSoFar, redefine that.
+      if(currentRun>MaxRunSoFar) MaxRunSoFar = currentRun
+    }
+    # otherwise, 
+    if(flips[i]!=flips[i-1]){
+      # set the current run back to 1
+      currentRun=1
+  }
+  }
+  return(MaxRunSoFar)
+}
+```
+
+```{r}
+#flip2
+s= flips2 %>% strsplit( split = "") %>% unlist() %>% longestRun()
+s
+#flip3
+s= flips3 %>% strsplit( split = "") %>% unlist() %>% longestRun()
+s
+#flip4
+s= flips4 %>% strsplit( split = "") %>% unlist() %>% longestRun()
+s
+#flip6
+s= flips6 %>% strsplit( split = "") %>% unlist() %>% longestRun()
+s
+```
+
+```{r}
+simulate_S = function(){
+  S = sample(c("H","T"), 200,replace=T) %>% longestRun()
+  return(S)
+}
+
+r = 1000
+monte_carlo = data.frame(replicate = 1:r, 
+                         S = rep(NA,r), 
+                         S_in_A = rep(NA, r)) 
+
+for(i in 1:r){
+  monte_carlo$S[i] = simulate_S()
+}
+hist(monte_carlo$S, main = "Simulation of flips and frequency of repeats", breaks = 20, xlab = "Number of repeats")
+lines(c(4,4), c(0,100000), col = "red", lwd = 3) #fllip2
+lines(c(6,6), c(0,100000), col = "blue", lwd = 3) #flip3
+lines(c(9,9), c(0,100000), col = "purple", lwd = 3) #flip4
+lines(c(12,12), c(0,100000), col = "orange", lwd = 3) #flip6
+```
+
+```{r}
+check_if_S_in_A = function(S){
+  return(S  <= 4)
+}
+
+for(i in 1:r){
+  monte_carlo$S_in_A[i] = check_if_S_in_A(monte_carlo$S[i])
+ 
+}
+
+monte_carlo = as_tibble(monte_carlo)
+p_value_flip2 = monte_carlo %>% summarise(mean(S_in_A))
+p_value_flip2
+```
+
+```{r}
+check_if_S_in_A = function(S){
+  return(S <= 6)
+}
+
+for(i in 1:r){
+  monte_carlo$S_in_A[i] = check_if_S_in_A(monte_carlo$S[i])
+ 
+}
+
+monte_carlo = as_tibble(monte_carlo)
+p_value_flip3 = monte_carlo %>% summarise(mean(S_in_A))
+p_value_flip3
+```
+
+```{r}
+check_if_S_in_A = function(S){
+  return(S >= 9)
+}
+
+for(i in 1:r){
+  monte_carlo$S_in_A[i] = check_if_S_in_A(monte_carlo$S[i])
+ 
+}
+
+monte_carlo = as_tibble(monte_carlo)
+p_value_flip4 = monte_carlo %>% summarise(mean(S_in_A))
+p_value_flip4
+```
+
+
+```{r}
+check_if_S_in_A = function(S){
+  return(S >= 12)
+}
+
+for(i in 1:r){
+  monte_carlo$S_in_A[i] = check_if_S_in_A(monte_carlo$S[i])
+ 
+}
+
+monte_carlo = as_tibble(monte_carlo)
+p_value_flip6 = monte_carlo %>% summarise(mean(S_in_A))
+p_value_flip6
+```
+
+As we can see from the results, both flip2 and flip6 can be eliminated, as they do not even achieve the 0.05 alpha. Out of the remaining two flip data, we can confidently choose flip4 as the truly random set, as it has a highest p-value, which is indicative of best fitting in the randomly generated simulation, thus being the most random. 

@@ -1,0 +1,222 @@
+---
+title: "STAT340: Discussion 2: Answers"
+author: "Joe S: Section 314, 315, 316"
+---
+
+```{r setup, include=FALSE}
+
+# check packages installed
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(knitr,tidyverse)
+
+library(tidyverse)
+```
+
+### Exercise 1
+
+```{r Exercise 1a}
+#(a)
+
+N = 10000
+
+d = matrix( runif(6*N), nrow = N )
+
+colnames(d) = c("x1","y1","z1","x2","y2","z2")
+
+print(head(d))
+
+```
+
+I solved this exercise using the hint that is provided. Clearly, there are several ways to do this problem.
+
+
+```{r Exercise 1b}
+distances = sqrt( (d[,"x1"]-d[,"x2"])^2 + (d[,"y1"]-d[,"y2"])^2 + (d[,"z1"]-d[,"z2"])^2 )
+m = mean(distances)
+
+print(m)
+
+#plotting distribution
+distances = tibble(distances)
+ggplot(distances, aes(x=distances)) +
+  geom_density()
+  
+```
+
+```{r Exercise 1c}
+
+robins_constant = 0.66170718226717623515582
+#approximately...
+
+error = 100*abs(m-robins_constant)/robins_constant
+
+print(error)
+```
+
+For extra bonus, lets do a trapazoid.
+
+```{r Exercise 1e}
+N = 10000
+y = runif(N, min = 0, max = 0.5)
+x = ( 0.5 / sqrt(0.75) ) * runif(N, min = y, max = ( sqrt(0.75) / 0.5  ) - y)
+
+print(head(x))
+print(head(y))
+ggplot(data.frame(x,y), aes(x = x, y = y)) +
+  geom_point()
+```
+
+```{r}
+d = matrix(data=c(x,y),ncol=4)
+colnames(d) = c("x1","x2","y1","y2")
+print(head(d))
+```
+
+```{r}
+distances = sqrt( ( d[,"x1"]-d[,"x2"] )^2 + ( d[,"y1"]-d[,"y2"] )^2 )
+print(mean(distances))
+```
+
+### Exercise 2
+
+```{r Exercise 2a}
+
+# given output of rbernoulli or rbinom (a vector of 0's and 1's)
+# compute the length of the longest continuous run of 1's
+longestHeadRun = function(trials){
+  with(rle(trials),max(c(0,lengths[values==1])))
+}
+
+N = 10
+
+d = rbinom(n=N, prob = 0.5, size = 1)
+print(d)
+
+print( longestHeadRun(d) )
+```
+
+```{r}
+
+findMeanRun = function(N,M,p=0.5) {
+  heads_in_arow = c(1:M)
+  
+  for (i in 1:M ) {
+    d = rbinom(n = N, prob = p, size = 1)
+    heads_in_arow[i] = longestHeadRun(d)
+  }
+  
+  mean(heads_in_arow)
+  
+}
+```
+
+```{r Exercise 2b}
+findMeanRun(10,1000)
+```
+
+```{r Exercise 2c and 2d}
+
+actual_mean = function(N,p=0.5) {
+  -log(N*(1-p), base = p)
+}
+
+
+m = c(
+  5, findMeanRun(5,10000), actual_mean(5),
+  7, findMeanRun(7,10000), actual_mean(7),
+  10, findMeanRun(10,10000), actual_mean(10),
+  12, findMeanRun(12,10000), actual_mean(12)
+)
+
+tab = matrix(m,ncol=3,byrow=TRUE)
+colnames(tab) = c("N","sampleMean","actualMean")
+tab = as.table(tab)
+
+print(tab)
+
+```
+
+note that the actual mean calculation comes from other people's results and is just an appoimation.
+
+```{r Exercise 3a}
+
+#choose a random mu and sigma
+mu = 10
+sigma = 1
+
+```
+
+```{r Exercise 3b}
+
+N = 2
+sample = rnorm(N, mean = mu, sd = sigma^2)
+
+t_statistic = sqrt(N)*( mean(sample) - mu )/sd(sample)
+print(t_statistic)
+
+```
+
+```{r Exercise 3c, 3d, and 3e}
+
+#this is a function, that, given N, M, mu, and sigma will produce a vector of t-statistics
+findTStatistics = function(N, M, mu = 0, sigma = 1) {
+  t_statistic = c(1:M)
+  
+  for (i in 1:M) {
+    sample = rnorm(N, mean = mu, sd = sigma^2)
+    t_statistic[i] = sqrt(N)*( mean(sample) - mu )/sd(sample)
+  }
+  
+  t_statistic
+  
+}
+
+N = 2
+
+t_statistic = findTStatistics(N,1000)
+
+t_statistic = tibble(t_statistic)
+
+ggplot(t_statistic) +
+  geom_density(aes(x=t_statistic), color = "blue") +
+  stat_function(fun = dt, args = list(df=N-1), color = "red", xlim = c( min( t_statistic ), max( t_statistic ) ) )
+
+```
+
+Let N = 2, this plots the density (in blue) vs the theoretical (in red). Clearly, convergence is difficult.
+
+
+```{r Exercise 3f}
+
+N = 3
+
+t_statistic = findTStatistics(N,1000)
+
+t_statistic = tibble(t_statistic)
+ggplot(t_statistic) +
+  geom_density(aes(x=t_statistic), color = "blue") +
+  stat_function(fun = dt, args = list(df=N-1), color = "red", xlim = c( min( t_statistic ), max( t_statistic ) ) )
+
+```
+```{r}
+N = 6
+
+t_statistic = findTStatistics(N,1000)
+
+t_statistic = tibble(t_statistic)
+ggplot(t_statistic) +
+  geom_density(aes(x=t_statistic), color = "blue") +
+  stat_function(fun = dt, args = list(df=N-1), color = "red", xlim = c( min( t_statistic ), max( t_statistic ) ) )
+```
+
+```{r}
+N = 11
+
+t_statistic = findTStatistics(N,1000)
+
+t_statistic = tibble(t_statistic)
+ggplot(t_statistic) +
+  geom_density(aes(x=t_statistic), color = "blue") +
+  stat_function(fun = dt, args = list(df=N-1), color = "red", xlim = c( min( t_statistic ), max( t_statistic ) ) )
+```
+

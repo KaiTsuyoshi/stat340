@@ -1,0 +1,87 @@
+---
+title: "STAT340 HW04: Models"
+date: "4/10/2022"
+author: "Kai Tsuyoshi"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Several problems inspired by ISLR. **Problems are worth 10 points each**
+
+
+## Question 1
+
+Suppose we have a data set with five predictors, $X_{1}=\text{GPA}$, $X_{2}=\text{IQ}$, $X_{3}=\text{Level ( 1 for College and 0 for High School)}$, $X_{4}=\textrm{Interaction between GPA and IQ}$, and $X_{5}=\text{Interaction between GPA and Level}$. The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get $\hat{\beta}_{0}=50$, $\hat{\beta}_{1}=20$, $\hat{\beta}_{2}=0.07$, $\hat{\beta}_{3}=35$, $\hat{\beta}_{4}=0.01$, $\hat{\beta}_{5}=-10$.
+
+a. Which answer is correct, and why?
+   i. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates.
+   ii. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates.
+   iii. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates provided that the GPA is high enough.
+   iv. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates provided that the GPA is high enough.
+b. Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0.
+c. True or false: Since the coefficient for the GPA/IQ interaction term is very small, there is very little evidence of an interaction effect. Justify your answer.
+
+
+## Question 2
+
+I collect a set of data ($n=100$ observations) containing a single predictor and a quantitative response. I then fit a linear regression model to the data, as well as a separate cubic regression, i.e. $Y=$ $\beta_{0}+\beta_{1} X+\beta_{2} X^{2}+\beta_{3} X^{3}+\epsilon$
+
+a. Suppose that the true relationship between $X$ and $Y$ is linear, i.e. $Y=\beta_{0}+\beta_{1} X+\epsilon$. Consider the training residual sum of squares (RSS) for the linear regression, and also the training RSS for the cubic regression. Would we expect one to be lower than the other, would we expect them to be the same, or is there not enough information to tell? Justify your answer.
+b. Answer a. using test rather than training RSS.
+c. Suppose that the true relationship between $X$ and $Y$ is not linear, but we don't know how far it is from linear. Consider the training RSS for the linear regression, and also the training RSS for the cubic regression. Would we expect one to be lower than the other, would we expect them to be the same, or is there not enough information to tell? Justify your answer.
+d. Answer (c) using test rather than training RSS.
+
+
+## Question 3
+
+Suppose we collect data for a group of students in a statistics class with variables $X_{1}=\text{hours studied}$, $X_{2}=\text{undergrad GPA}$, and $Y=\text{receive an A}$. We fit a logistic regression and produce estimated coefficient, $\hat{\beta}_{0}=-6, \hat{\beta}_{1}=0.05, \hat{\beta}_{2}=1$.
+
+a. Estimate the probability that a student who studies for $40\mathrm{h}$ and has an undergrad GPA of $3.5$ gets an A in the class.
+b. How many hours would the student in part a. need to study to have a $50\%$ chance of getting an A in the class?
+
+
+## Question 4
+
+This question uses the `titanic` dataset from the `DALEX` package. This is a **real dataset** documenting which passengers on the RMS Titanic survived.
+
+a. Convert the `survived` variable to 0, 1 with 1 indicating a passenger who survived, and fit a logistic regression to predict survival based on all other predictors.
+b. Which variables appear to be significant?
+c. Interpret the coefficients for `gender`, `age`, and `fare`. Do they appear to correlate with higher or lower odds of survival? How much do the odds of survival appear to change with respect to each of these variables?
+d. Do your results from c. make sense with your expectations?
+
+```{r,warning=F,message=F}
+# make sure you have the DALEX package
+library(DALEX)
+
+# you should read the help page by running ?titanic
+# we can also peek at the data frame before using it
+str(titanic)
+head(titanic)
+```
+
+
+## Question 5
+
+This question should be answered using the `Carseats` dataset from the `ISLR` package.
+
+a. First, make some visualizations of the dataset to help set the stage for the rest of the analysis. Try to pick plots to show that are interesting informative.
+c. Using some variable selection method (CV, stepwise, LASSO, ridge, or even something else), choose a set of predictors to use to predict `Sales`. Try to find the best model that you can that explains the data well and doesn't have useless predictors.
+d. Which predictors appear to be the most important or significant in predicting sales? Provide an interpretation of each coefficient in your model. Be careful---some of the variables in the model are qualitative!
+e. Provide $90\%$ confidence intervals for each coefficient in your model.
+f. Using cross-validation, estimate the true out-of-sample MSE of your model.
+g. Check the residuals. Do you think this is an appropriate model to use? Why or why not?
+
+```{r,warning=F,message=F}
+# make sure you have the ISLR package
+library(ISLR)
+
+# you should read the help page by running ?Carseats
+# we can also peek at the data frame before using it
+str(Carseats)
+head(Carseats)
+```
+

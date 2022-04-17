@@ -1,0 +1,234 @@
+
+---
+title: "STAT 340 Midterm exam"
+author: "Kai Tsuyoshi"
+date: "3/11/2022"
+output: html_document
+---
+
+<style>
+h2{margin:35px 0 0}
+div.section h4{margin-top:30px}
+div.section h3{margin-top:15px}
+div.level2{margin-bottom:55px}
+div.level3{margin-bottom:30px}
+</style>
+
+
+```{r include=F}
+
+knitr::opts_chunk$set(echo=T,eval=T,warning=F,message=F)
+library(tidyverse)
+library(moments)
+```
+
+## Question 1   <small>(MC/R use)</small>
+
+### a) [6 pts] Derangement problem
+
+You are a professor at a prestigious university. One day, just after you
+finish grading your students' midterms, you accidentally spill coffee
+all over the entire pile of exams. By coincidence, the coffee ONLY destroys
+the name on each exam, so that you cannot read which student submitted which
+exam. The next day, you bring the exams to class and randomly distribute the
+exams back to your students, so that each student receives an exam back
+completely at random.
+
+What is the probability, as a function of the number of students $N$,
+that **every student gets a different exam**? (i.e. not a SINGLE student
+gets their own exam back).
+
+Write a function `mc.derange(n,i)` that accepts 2 arguments:
+
+  - `n` is the number of students in your class
+  - `i` is the number of Monte Carlo iterations used (defaults to 1000)
+    - *hint:* recall that to set a default argument, use `i=1000` in the
+      function statement (this has actually already been done for you below)
+
+and returns an output between 0 and 1 showing the proportion of iterations
+where every student gets a different exam.
+
+(Hint: you can use `sample()` to permute a vector,
+`!=` to check if two vectors are different in each element,
+and `all()` to check if all elements in a vector are `TRUE`)
+
+```{r }
+mc.derange = function(n,i=1000){
+  counter = 0
+  for(loop in 1:i){
+    orig = sample(1:n, size = n, replace = FALSE)
+    coff = sample(1:n, size = n, replace = FALSE)
+    if (all(orig != coff)){
+      counter = counter + 1
+    }
+  
+  }
+return(counter/i)
+}
+
+# if you did it right, this result should be between 0.32 and 0.42
+
+mc.derange(20,1000)
+```
+
+
+### b) [4 pts] Visualize results
+
+It can be shown that the theoretically correct probability
+is exactly equal to $\operatorname{floor}(n!/e-\frac12)/n!$
+which rapidly converges $\to1/e\approx0.367879$ as $n\to\infty$
+(after $n>9$, the error between the exact value and $1/e$
+is less than $10^{-7}$)
+
+The chunk below (already done for you), runs your `mc.derange` function
+for $n=2,3,...,9$ and saves the results in a data frame named `df.derange`.
+Use this data frame to produce a visualization comparing the theoretical
+values with your Monte Carlo computed values (plot both with respect to `n`).
+
+(You can use either `ggplot` functions or base R functions, but
+try to plot both on the same plot if possible). Make sure to have appropriate
+title and axes labels! (default or bad titles/labels may be penalized!)
+
+```{r }
+df.derange = tibble(
+  n = 2:9,
+  theory = c(0.5, 0.333333, 0.375, 0.366667, 0.368056, 0.367857, 0.367882, 0.367879),
+  mc = sapply(2:9,mc.derange)
+)
+
+ggplot(df.derange)+
+  geom_point(aes(x = n, y = theory, color = "theory"))+
+  geom_point(aes(x = n, y = mc, color = "mc"))+
+  xlab("Number of Students") +
+  ylab("Probability of No Repeats")+
+  ggtitle("Theory vs. Monte Carlo Results of Handing out Tests")
+```
+
+
+
+## Question 2   <small>(Testing/Estimation)</small>
+
+### a) [10 pts] Testing widgets
+
+You are an analyst for the USDW (US Department of Widgets);
+your job is to make sure widget factories are operating in accordance
+with very strict federal widget guidelines. Each year, widget companies
+are required to submit a sample of widgets for inspection to make sure
+they are safe and effective. Each year, you also choose a small subset of
+widget companies to audit to make sure they are not engaging in
+deceptive business practices by fraudulently manipulating their samples.
+
+This year, you chose to audit UW-Madison (United Widgeteers of Madison).
+You go undercover and secretly collect a high quality representative sample
+(`samp1` below) of widgets from a UW-Madison factory to compare with
+the sample they provided for inspection (`samp2` below).
+
+```{r }
+samp1 = c(5.672, 6.023, 7.143, 11.887, 5.976, 7.309, 5.679, 7.286, 10.209, 5.718,
+          6.901, 5.431, 7.112, 9.206, 9.327, 11.013, 8.663, 8.973, 6.456, 12.901,
+          6.441, 5.658, 5.562, 13.885, 10.175, 11.052, 9.356, 11.507, 6.148, 5.717,
+          5.063, 6.191, 6.243, 6.185, 7.691, 6.784, 7.393, 9.566, 5.991, 6.159,
+          8.79, 6.781, 18.458, 6.613, 10.373, 8.365, 7.811, 8.17, 7.608, 5.179,
+          7.396, 6.033, 6.247, 9.427, 6.952, 13.344, 10.973, 5.038, 6.851, 5.204,
+          5.44, 8.29, 6.652, 7.967, 5.379, 8.58, 7.439, 6.886, 8.61, 6.957, 5.777,
+          14.26, 8.015, 7.618, 5.429, 6.487, 5.725, 6.147, 9.373, 6.436, 8.004,
+          7.81, 6.771, 6.292, 5.509, 6.099, 11.195, 6.147, 5.835, 17.068, 6.047,
+          5.433, 10.893, 5.738, 6.306, 6.385, 8.558, 7.8, 6.103, 10.797)
+
+samp2 = c(10.056, 9.653, 9.517, 10.923, 9.966, 6.291, 6.34, 3.982, 6.303, 6.07,
+          7.678, 8.672, 5.488, 8.511, 9.386, 8.897, 7.606, 6.848, 6.822, 8.762,
+          6.569, 8.568, 9.013, 9.615, 8.649, 6.712, 8.895, 6.939, 5.351, 3.818,
+          5.068, 10.701, 7.629, 7.803, 7.218, 5.476, 5.029, 9.102, 11.569, 8.379,
+          10.972, 11.684, 9.192, 8.924, 7.634, 9.118, 3.333, 10.061, 7.848, 8.284,
+          8.168, 7.703, 9.906, 7.568, 10.972, 7.429, 6.54, 8.537, 3.369, 8.549,
+          10.094, 5.865, 6.583, 6.752, 5.556, 5.299, 8.118, 9.128, 7.524, 6.934,
+          9.12, 10.226, 8.579, 8.64, 8.707, 7.248, 5.582, 10.05, 8.506, 10.384,
+          9.603, 7.529, 5.795, 8.43, 8.273, 10.792, 9.792, 7.787, 11.407, 7.845,
+          9.575, 9.122, 10.057, 8.716, 6.58, 7.375, 8.196, 6.673, 11.114, 6.846)
+```
+
+Carefully inspect the two samples and conduct a test at $\alpha=0.05$
+to decide if UW-Madison falsified the sample they provided for inspection
+(i.e. did the two samples come from the same distribution?).
+Report a p-value and write a clear conclusion.
+
+(Hint: First, plot histograms of the two samples. Do they look similar?
+Then, look at a few different summary statistics. What do you notice?
+If they seem different, can you find a statistic helps you differentiate them?
+Remember, if two samples come from the *exact* same distribution,
+you should expect them to have similar statistical properties.)
+
+
+```{r}
+tibble(values = c(samp1,samp2), group = c(rep("samp1",100), rep("samp2", 100))) %>% 
+  ggplot(aes(x = values, fill = group, color = group)) +
+  geom_histogram() 
+```
+
+
+```{r}
+mean(samp1)
+sd(samp1)
+mean(samp2)
+sd(samp2)
+t.test(samp1, samp2)
+
+```
+
+Our null hypothesis is that the two are of the same distribution, that mean of samp1 = mean of samp2, and our alternative that mean of samp1 is not the same as mean of samp2. Based on the t test, we see that the p-value is 0.3998 > 0.05, which means that we fail to reject the null that the means are different, and thus prove that the two are taken from the same data set. 
+
+### b) [10 pts] Confidence interval
+
+Approximate the true distribution of widgets as a normal distribution
+with a known variance of 6 and unknown mean. Using your own sample (`samp1`),
+construct a 95% confidence interval for the true mean of widgets from this factory.
+
+```{r}
+mean_smp = mean(samp1)
+sd_smp = sd(samp1)
+n = length(samp1)
+error = qt((0.95 + 1)/2, df = n - 1) * sd_smp / sqrt(n)
+result = c("lower" = mean_smp - error, "upper" = mean_smp + error)
+
+result
+```
+
+
+
+ 
+## Question 3   <small>(EDA)</small>
+
+### [5 pts]
+
+The `attitude` dataset (loaded by default into R) contains data from
+"a survey of the clerical employees of a large financial organization". Description of variables:
+
+  - rating: Overall rating
+  - complaints: Handling of employee complaints
+  - privileges: Does not allow special privileges
+  - learning: Opportunity to learn
+  - raises: Raises based on performance
+  - critical: Too critical
+  - advance: Advancement
+
+Run PCA on the dataset to compute the principal components.
+
+  1. Plot the first two PC axes, showing what the data look like on the new axes
+     as well as the loadings vectors and their labels.
+  2. What proportion of the information is captured in just the first 2 axes?
+  3. If you want to keep at least 90% of the information in the dataset,
+what's the minimum number of axes you need to keep?
+
+```{r}
+attitude
+prcomp(attitude, scale = TRUE)
+biplot(prcomp(attitude, scale = TRUE))
+```
+
+Only 0.175 of information is captured in the first 2 axes
+
+We need to keep at least four axes to maintain 90% of the data set.
+
+
+
+

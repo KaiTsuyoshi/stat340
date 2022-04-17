@@ -1,0 +1,190 @@
+
+---
+title: "Practice 340 midterm"
+output: html_document
+---
+
+Credit to Karl Rohe for these questions.
+
+
+
+### 1) Poisson.
+
+**1a:** Compute the probability that a Poisson($\lambda = 1$) random variable is an even number. You can generate a poisson random variable with `rpois(n = 1,lambda = 1)`. You can check if `X` is even via 
+
+```{r}
+# the function %% finds remainder after dividing by a divisor
+# then, ==0 checks if remainder is equal to 0. this is true iff even
+
+is.even = function(X) return((X%%2)==0)
+
+is.even(3)
+is.even(112)
+
+# also works on vector input
+is.even(c(1,2,3,4,5))
+```
+
+Solution
+
+```{r}
+pois_vec = rpois(1e5,1)
+mean(is.even(pois_vec))
+```
+ 
+**1b:**  Compute the probability that a Poisson($\lambda = 10$) random variable is even.
+
+Solution
+
+```{r}
+pois_vec = rpois(1e5,10)
+mean(is.even(pois_vec))
+```
+
+**1c:**  Compute the probability that a Poisson($\lambda = 10$) random variable is greater than 20.
+
+Solution
+
+```{r}
+# Monte Carlo solution
+pois_vec = rpois(1e5,10)
+mean(pois_vec > 20)
+
+# Exact solution
+1-ppois(20,10) # very close!
+
+```
+
+**1d:**  Let $X \sim$ Poisson($\lambda =10$).  Use Monte Carlo to compute $\mathbb{E}(X)$.
+
+Solution
+
+```{r}
+pois_vec = rpois(1e5,10)
+mean(pois_vec) # close to 10, the theoretical expected value
+```
+
+
+
+### 2) Geometric
+
+In class, we defined Geometric($p$) to be the number of failures required **before the first** success in a sequence of Bernoulli($p$) coin flips (remember this is also the definition used in `R` and `rgeom()`). So, FALSE FALSE TRUE would be 2. Some other places define Geometric($p$) to be the number of flips required **to get the first** success. So, FALSE FALSE TRUE would be 3. These definitions are very similar; the second is always one more than the first. However, this difference might get annoying if you aren't careful.
+
+**2a:** Let $X \sim$ Geometric($p=1/10$) according to **the second definition** (i.e. always 1 more than the definition we use in class). Write a function to simulate $X$.
+
+Solution
+
+```{r}
+rgeom2 = function(n, prob){
+  return(rgeom(n,prob) + 1)
+}
+```
+
+
+**2b:** Using the definitions in 2a, compute $\mathbb{E}(X)$ using Monte Carlo.
+
+Solution
+
+```{r}
+geom_vec = rgeom2(1e5,0.3) #should we use any p we like??
+mean(geom_vec) # very close to theoretical expected value of 1/p = 1/0.3 = 3.333
+```
+
+**2c:** Using the definitions in 2a, compute $P(X>20)$.
+
+Solution
+
+```{r}
+# Monte Carlo solution
+geom_vec = rgeom2(1e5,0.3)
+mean(geom_vec > 20)
+```
+
+**2d:** Both 2b and 1d ask to compute the expectation. How do the answers compare? Both 2c and 1c ask to compute the probability of being greater than 20. How do the answers compare? Make sense of this phenomenon by visualizing these two distributions (i.e. make their histograms); what's going on with the distributions?
+
+Solution
+
+```{r}
+hist(pois_vec)
+hist(geom_vec)
+```
+
+We can see the Poisson random variable is more likely to exceed 20 than the geometric is.
+
+
+
+### 3) Meme proportions
+
+One day in a virtual class, students posted 416 comments in Zoom chat during class. An expert panel has judged 47 of these comments to be memes.
+
+The big-bad-deans say that they are concerned "if there is evidence that more than 10% of comments are memes." So, this looks like bad news, 47/416 > 10\%.
+
+Karl pleads with the deans: "Please, oh please, you big-bad-deans...memeing is totally random." (I don't actually know what this notion of "random" means, but please just run with it for this question.)
+
+Then, along comes you, a trusty and dedicated 340 student. You say that "because we have only observed 416 comments, we don't really know what the 'true proportion' of memes."
+
+**3a:** What would be a good distribution for the number of memes (in 416 comments)?
+
+Solution
+
+Binomial(416, p)
+
+**3b:** Using your distribution from 3a, test the null hypothesis that the 'true proportion' is actually 10\%. It's all up to you now ... report the p-value.
+
+Solution
+
+We can use Monte Carlo simulation to answer this question:
+
+Null hypothesis: p = 10\%
+
+Alternative hypothesis: p > 10\%
+
+The direction of the inequality in the alternative is usually informed by the
+preliminary data that we have (here we have 47/416 > 10\%).
+
+Monte Carlo strategy: simulate many times from a Binomial(416, 0.1) and see in
+how many of those times we observe a value of 47 or more extreme (i.e. larger).
+```{r}
+set.seed(123) # to be able to reproduce the random results I'm about to get
+M = 1e5 #sample 10^5 times from a Binomial(416, 0.1)
+MC.BinSamples = rbinom(M,416,0.1)
+mean(MC.BinSamples >= 47) # 21%
+```
+
+If the number of memes included in 416 comments truly follows a Binomial(416, 10\%),
+in about 21/% of the cases we would still observe 47 or more memes
+(again, this is even if the true proportion of memes in just 10\%).
+
+Therefore, nothing to worry about: having seen 47 memes is compatible
+with the true proportion of memes being no greater than 10\%.
+
+
+**3c:** After seeing your answer to 3b, the deans retort, "just because you failed to reject the null hypothesis does not mean that we accept your null hypothesis of 9%." But you respond, "you said you are concerned 'If there is evidence that more than 10% of comments are memes.'" We interpret our failure to reject as insufficient evidence that more than 10% of comments are memes. They begrudgingly go along with your point (and say that they are going to clarify their language in the future). In the end, they ask you to provide a 95% confidence interval for the true proportion. Provide a 95% confidence interval for the 'true proportion'.
+
+Solution
+
+Again, we can use a Monte Carlo simulation to answer this question.
+
+Strategy: use the sample proportion of 47/416 and treat it as the true proportion;
+then draw samples from this distribution (Binomial(416, 47/416));
+then compute the sample proportion each time, so as to get the distribution
+of the sample mean under the above parameters; finally, report the quantiles
+2.5\% and 97.5\% as bounds of the 95\% confidence interval for the true proportion.
+
+```{r}
+# See Lecture 5
+p_hat = 47/416
+
+set.seed(123) # to be able to reproduce the random results I'm about to get
+M = 1e5 #sample 10^5 times from a Binomial(416, p_hat)
+
+MC.BinSamples2 = rbinom(M,416,p_hat)
+MC.MemeProportions = MC.BinSamples2/416
+
+# Now construct the confidence interval
+CI = quantile( MC.MemeProportions, probs=c(0.025, 0.975) )
+```
+
+With (approximately) 95\% confidence, we claim that the true proportion of
+memes is roughly between 8.4\% and 14.4\%. Note that 10\% is included in this
+confidence interval, which agrees with the conclusion of our hypothesis test in part b).
