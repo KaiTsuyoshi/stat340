@@ -1,0 +1,6 @@
+unnamed-chunk-1	.	%>%	<	$	aes	any	c	data.frame	expression	F	g	geom_hline	geom_point	geom_smooth	ggplot	labs	library	lower.tri	matrix	mean	p	replicate	rnorm	sapply	scale_y_continuous	ttests.pairs
+unnamed-chunk-2	.	%>%	<	$	aes	any	c	choose	data.frame	expression	F	g	geom_hline	geom_point	geom_smooth	ggplot	labs	lower.tri	matrix	mean	p	replicate	rnorm	sapply	scale_y_continuous	seq	set.seed	ttests.pairs
+unnamed-chunk-3	.	%>%	<	$	aes	any	c	data.frame	expression	F	g	geom_hline	geom_point	geom_smooth	ggplot	labs	lower.tri	matrix	mean	p	p.adjust	replicate	rnorm	sapply	scale_y_continuous	seq	set.seed	ttests.pairs
+unnamed-chunk-4	qtukey
+unnamed-chunk-5	.	%>%	>	aes	c	colmeans	colVars	data.frame	diff	expression	F	g	geom_hline	geom_point	geom_smooth	ggplot	labs	matrix	mean	p	qtukey	range	replicate	rnorm	sapply	scale_y_continuous	seq	set.seed	sqrt	sum
+unnamed-chunk-6	%>%	aes	bonf	c	expression	F	g	geom_hline	geom_point	geom_smooth	ggplot	holm	labs	method	p	rbind	scale_color_brewer	scale_shape_manual	scale_size_manual	scale_y_continuous	tukey

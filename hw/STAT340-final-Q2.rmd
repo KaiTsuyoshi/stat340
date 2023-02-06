@@ -1,0 +1,174 @@
+---
+title: "STAT 340 Final exam - Question 2"
+author: "Kai Tsuyoshi"
+date: "5/13/2021"
+output: html_document
+---
+
+```{r include=F}
+knitr::opts_chunk$set(echo=T,warning=F,message=F,fig.align="center",error=T)
+library(tidyverse)
+library(lme4)
+library(glmnet)
+```
+
+
+
+***REMEMBER:***
+
+
+ - Unless manual/by hand calculation specifically requested, you can **use any R functions covered in class**. Functions not covered in class MAY NOT be graded (depending on context).
+ - **All plots MUST have reasonably good titles/labels** (quality of titles/labels subject to determination by graders). Failure to do so MAY result in penalties.
+ - Also note that `error=TRUE` has been turned on in the setup chunk. This means that **the file will knit EVEN if there are errors**! This will ensure you always have an HTML file to submit, but remember to ***CHECK YOUR FILE FOR ERRORS BEFORE YOU SUBMIT!!*** You can turn this off if you like, but it seems to help most people.
+
+
+
+## Question 2: Pasteurization samples
+
+
+A dairy company is researching the effectiveness of 4 different pasteurization methods for sanitizing its products to extend shelf life. Four samples each pasteurized with a different method were prepared. Then, each sample was divided into 10 subsamples. 5 labs from the nearby area were randomly chosen and 2 subsamples from each method were sent to each lab to be analyzed. The number of microorganisms reported by each lab for each sample is shown below:
+
+<center><div style="width:40%">
+|           | sample 1 | sample 2 | sample 3 | sample 4 |
+|:---------:|:--------:|:--------:|:--------:|:--------:|
+| **lab 1** | 220      | 300      | 210      | 270      |
+|           | 210      | 290      | 200      | 260      |
+| **lab 2** | 260      | 360      | 290      | 360      |
+|           | 250      | 350      | 240      | 380      |
+| **lab 3** | 190      | 250      | 160      | 230      |
+|           | 210      | 220      | 200      | 230      |
+| **lab 4** | 260      | 280      | 330      | 350      |
+|           | 430      | 180      | 340      | 290      |
+| **lab 5** | 400      | 480      | 370      | 500      |
+|           | 390      | 480      | 340      | 480      |
+</div></center>
+
+```{r}
+# for your convenience, the data import code has been done for you below
+dairy = data.frame(
+  lab = rep(1:5,times=rep(8,5)),
+  samp = rep(1:4,length.out=40),
+  value = c(220,300,210,270, 210,290,200,260,
+            260,360,290,360, 250,350,240,380,
+            190,250,160,230, 210,220,200,230,
+            260,280,330,350, 430,180,340,290,
+            400,480,370,500, 390,480,340,480))
+head(dairy)
+```
+
+
+
+### Part I <small>(pts: 1, 3, 1, 1)</small>
+
+
+First, for each sample, combine all the observations from the different labs and treat them as a single group (i.e. **ignore which lab reported which values**).
+
+a. Make boxplots comparing the median and spread of each group. **Comment on the plot**.
+
+```{r}
+boxplot(value ~ samp, data = dairy, xlab = "Sample Group", ylab = "Value", main = "Shelf Life Value vs. Pastuerization Method ")
+```
+
+We can see that for each sample group, the median and spread seem somewhat similar in spread and median across each sample group, or at least does not have extreme variation. 
+
+
+
+b. Construct an ANOVA table by hand (i.e. using basic R functions) to test if there are any significant differences in the mean microorganism count after applying each pasteurization method. **Report a p-value and write a conclusion** interpreting the results in the context of the original question.
+
+   Note: you may use the following table as a template. 
+   
+```{r}
+
+data = data.frame(samp1 = c(220, 210, 260, 250, 190, 210, 260, 430, 400, 390),
+                  samp2 = c(300, 290, 360, 350, 250, 220, 280, 180, 480, 480),
+                  samp3 = c(210, 200, 290, 240, 160, 200, 330, 340, 370, 340),
+                  samp4 = c(270, 260, 360, 380, 230, 230, 350, 290, 500, 480))
+
+sample_size = 40
+a = 4
+treatmentdf = 3
+errordf = 40 - 4 = 36
+grand_mean = mean(unlist(data))
+grand_mean
+colMeans(data)
+SST =sum((colMeans(data) - grand_mean)^2 * 10)
+SST
+
+library(Rfast)
+SSE = sum(colVars(as.matrix(data)) * 9)
+SSE
+
+f = (SST/3)/(SSE/36)
+f
+
+p = 1 - pf((SST/3)/(SSE/36), 3, 36)
+p
+```
+   
+   
+
+   <center><div style="width:50%">
+   | Source     |  SS       |  df  |  MS      |  F_obs   |  p-value   |
+   |------------|----------:|-----:|---------:|:--------:|:----------:|
+   | Treatments | 293000    | 3    | 97666    | 1.178    | 0.332      |
+   | Error      | 298460    | 36   | 8290.56  |          |            |
+   | Total      | 591460    | 40   |          |          |            |
+   </div></center>
+
+c. If necessary, do post-hoc analysis.
+
+Because the p-value is 0.332, we cannot reject the null that states that the means are significantly different, thus not requiring a post-hoc analysis
+
+d. Run model diagnostics to check if assumptions are satisfied.
+
+```{r}
+aov.dairy = aov(value ~ samp, data = dairy)
+par(mfrow=c(1,2))
+plot(aov.dairy,which=1:2,ask=F)
+```
+
+### Part II <small>(pts: 3, 1, 1, 1)</small>
+
+
+Now, we're going to use a different approach to take into account the different labs. Specifically, suppose we want to find if the labs are consistent with each other or not. Since the subsamples were derived from the same initial sample, it shouldn't matter which specific lab the results were sent to, and they should each report similar values.
+
+(*Hint: remember the labs were randomly sampled from a population of labs in the area.*)
+
+a. Compute a 90% confidence interval for the **standard deviation between lab means**.
+
+```{r}
+labdata = data.frame(lab1 = c(220, 300, 210, 270, 210, 290, 200, 260),
+                     lab2 = c(260, 360, 290, 360, 250, 350, 240, 380),
+                     lab3 = c(190, 250, 160, 230, 210, 220, 200, 230),
+                     lab4 = c(260, 280, 330, 350, 430, 180, 340, 290),
+                     lab5 = c(400, 480, 370, 500, 390, 480, 340, 480))
+data1 = c(sd(labdata$lab1), sd(labdata$lab2), sd(labdata$lab3), sd(labdata$lab4), sd(labdata$lab5))
+data1
+mean = (mean(data1))
+B = 500
+replic = rep(NA, B)
+for(i in 1 : B){
+  sample = sample(data1, replace = TRUE)
+  replic[i] = mean(sample)
+}
+replic
+se = sd(replic)
+CI = c(mean - 1.645* se, mean + 1.645 * se)
+CI
+```
+
+
+b. Does your data support the conclusion that the labs are consistent? **Explain why or why not**.
+
+The labs are not consistent, as the confidence interval is quite large, and three out of the five standard deviations of the five labs is not even contained within that interval, and of those, two are quite outlying, at 27.99 and 73.63. 
+
+c. What proportion of the overall variance can be attributed to the lab-to-lab variation? What proportions is attributed to random error?
+
+0.73 can be attributed to lab to lab variation, and 0.27 to random error
+
+d. Run model diagnostics to check if assumptions are satisfied.
+
+```{r}
+
+```
+

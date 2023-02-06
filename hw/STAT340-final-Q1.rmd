@@ -1,0 +1,53 @@
+---
+title: "STAT 340 Final exam - Question 1"
+author: "Kai Tsuyoshi"
+date: "5/13/2022"
+output: html_document
+---
+
+```{r include=F}
+knitr::opts_chunk$set(echo=T,warning=F,message=F,fig.align="center",error=T)
+library(tidyverse)
+library(lme4)
+library(glmnet)
+```
+
+
+
+***REMEMBER:***
+
+
+ - Unless manual/by hand calculation specifically requested, you can **use any R functions covered in class**. Functions not covered in class MAY NOT be graded (depending on context).
+ - **All plots MUST have reasonably good titles/labels** (quality of titles/labels subject to determination by graders). Failure to do so MAY result in penalties.
+ - Also note that `error=TRUE` has been turned on in the setup chunk. This means that **the file will knit EVEN if there are errors**! This will ensure you always have an HTML file to submit, but remember to ***CHECK YOUR FILE FOR ERRORS BEFORE YOU SUBMIT!!*** You can turn this off if you like, but it seems to help most people.
+
+
+
+## Question 1: Population estimation <small>(5 pts)</small>
+
+
+You are hired by an environmental ecologist to study the population of moose in Minnesota, which has been in decline in recent years. The moose is an important species in the ecosystem, so it's important to understand how and why its population is changing in the wild.
+
+Let the population size of the moose in Minnesota be $N$. In last winter, you went out and captured and tagged (i.e. placed a marking on) 250 moose, so that if you see them again you will recognize them as having been previously captured. You then released them back into the wild. The following spring, after they have had enough time to completely mix with the rest of the wild moose, you come back and capture another 250 moose. You see that 14 of them have been captured previously on your last visit.
+
+It can be shown that one effective estimator of the total population is $$\hat N=\frac{m^2}k$$ where $m$ is the sample size drawn each time, and $k$ is the number of observations in the second sample already tagged.
+
+Using this knowledge and the data given, produce **both a point estimate** of $N$ (the true population size) **and a 90% confidence interval** for $N$.
+
+(*Hint:* The first sample ensures 250 of the $N$ total moose are already tagged. Repeatedly sample from this, count how many were captured twice, use these counts to get other "fake" estimates of $N$, and then you will have its distribution. This is just like every other confidence interval problem.)
+
+```{r}
+# simulate poisson, make bootstrap to simulate, find m^2/k in each simulation, find point estimate and 90% 
+replic = rep(NA, 200)
+for(i in 1 : 200){
+  sample = rpois(200, lambda = 250)
+  replic[i] = (sample[i]^2)/14
+}
+pt_est = mean(replic)
+pt_est
+se = sd(replic)
+CI = c(pt_est - 1.645* se, pt_est + 1.645 * se)
+CI
+
+```
+

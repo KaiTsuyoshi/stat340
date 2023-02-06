@@ -1,0 +1,99 @@
+---
+title:  "STAT340: Discussion 7: More regression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# check packages installed
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## XKCD comic
+
+<center><a href="https://xkcd.com/1725/"><img id="comic" src="https://imgs.xkcd.com/comics/linear_regression.png" title="The 95% confidence interval suggests Rexthor's dog could also be a cat, or possibly a teapot."></a></center>
+
+---
+
+## Exercise
+
+Today we're going to use the built-in `mtcars` dataset to practice regression. Note this is a built-in dataset provided as part of the `datasets` package in `R`.
+
+
+### Background
+
+Run `?(mtcars)` in the console (do NOT add it to this `Rmd` file) and briefly read the help page. Specifically, take note of the following:
+
+1. What is the source of this data?
+2. What is this dataset measuring? (i.e. what is the response variable?)
+3. What predictors are available and what do they mean?
+
+You may want to also run `head(mtcars, 10)` or `View(mtcars)` to inspect the data frame briefly before moving on.
+
+
+### Fitting
+
+Uncomment the line below and finish it. Specifically, use `lm` to run a regression of `mpg` on a few predictors in the data frame (choose a few that you think would make a good model). Make sure to include `data = mtcars` as an argument to tell R what data frame to use.
+
+```{r}
+# lm.mtcars = lm(...)
+```
+
+View a summary of the regression by uncommenting and running the line below
+
+```{r}
+# summary(lm.mtcars)
+```
+
+Briefly inspect the residuals plot by running `plot(lm.mtcars,ask=F,which=1:2)` . What do you observe, and what does it mean?
+
+> _REPLACE TEXT WITH RESPONSE_
+
+
+### Interpretation
+
+Uncomment the line below to get the estimated coefficients along with their standard errors, and statistics testing whether they're zero.
+
+```{r}
+# summary(lm.mtcars)$coefficients
+```
+
+Give an interpretation of the estimate and standard error for one of your predictors. Be careful in your wording of the interpretation.
+
+> _REPLACE TEXT WITH RESPONSE_
+
+What does the intercept here mean? (Except for special situations, we generally don't care much about the intercept, but you should still understand what it means.)
+
+> _REPLACE TEXT WITH RESPONSE_
+
+Which coefficients are significant? How do you know?
+
+> _REPLACE TEXT WITH RESPONSE_
+
+What is the Residual Standard Error (RSE) for this model? How many degrees of freedom does it have?
+
+> _REPLACE TEXT WITH RESPONSE_
+
+What is the R² for this model? (Hint: look at the output of `summary`) Give an interpretation of this value.
+
+> _REPLACE TEXT WITH RESPONSE_
+
+Briefly read about the [adjusted R² here](https://www.statisticshowto.com/probability-and-statistics/statistics-definitions/adjusted-r2/). What is the adjusted R² of this model and how does this differ from the normal R² value? (Hint: again, look at the output of `summary`).
+
+> _REPLACE TEXT WITH RESPONSE_
+
+Generate $95\%$ confidence intervals for the coefficients using the `confint` function. Give an interpretation of these confidence intervals.
+
+```{r}
+# confint(...)
+```
+
+> _REPLACE TEXT WITH RESPONSE_
+
+
+## Complex terms
+
+Look carefully at the available predictors in the data frame. Using a combination of interaction plots, data plots, and test fits, can you improve the model by finding either an interaction OR a non-linear term that is **appropriate** and **significant**?
+
+Repeat the steps above for this new term. Give interpretations of the estimate, error, significance, and find a confidence interval for the new parameter. How have the R² and adjusted R² changed?
+
+Do you think you can improve your model any further? Feel free to try some more models if you want. What model in the end seemed like the best fit for the data?

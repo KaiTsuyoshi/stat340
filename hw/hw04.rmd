@@ -22,8 +22,34 @@ a. Which answer is correct, and why?
    ii. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates.
    iii. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates provided that the GPA is high enough.
    iv. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates provided that the GPA is high enough.
-b. Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0.
+   
+   
+   
+iii. is correct, because $Y = \hat{\beta}_{0} + \hat{\beta}_{1}X_{1} + \hat{\beta}_{2}X_{2} + \hat{\beta}_{3}X_{3} + \hat{\beta}_{4}X_{4} + \hat{\beta}_{5}X_{5}$. 
+   Thus, salary = 50 + 20 * GPA + 0.07 * IQ + 35 * Level + 0.01 * (GPA * IQ) - 10 * (GPA * Level)
+   For a fixed value of GPA and IQ, we take high school students, which can be represented by       level=0,
+   which yields 
+   salary =  50 + 20 * GPA + 0.07 * IQ + 0.01 * (GPA * IQ)
+   and for a fixed value of GPA and IQ of college students represented by level = 1,
+   salary = 50 + 20 * GPA + 0.07 * IQ + 35 + 0.01 * (GPA * IQ) - 10 * (GPA * 1)
+   
+   Thus, assuming GPA is high enough, thanks to the - 10 * (GPA * 1) portion of the equation, high school graduates would earn more on average than college graduates. 
+   
+   
+   
+   
+b. Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0. 
+
+
+salary = 50 + 20 * (4.0) + 0.07 * (110) + 35 + 0.01 * (4.0 * 110) - 10 * (4.0 * 1) = 137,100
+
+
+
+
 c. True or false: Since the coefficient for the GPA/IQ interaction term is very small, there is very little evidence of an interaction effect. Justify your answer.
+
+False. A small coefficient does not indicate lesser evidence of an interaction effect, because it is possible to have a large amount of evidence of a small effect. In short, statistical significance of an interaction is different from the magnitude of said interaction
+
 
 
 ## Question 2
@@ -31,9 +57,20 @@ c. True or false: Since the coefficient for the GPA/IQ interaction term is very 
 I collect a set of data ($n=100$ observations) containing a single predictor and a quantitative response. I then fit a linear regression model to the data, as well as a separate cubic regression, i.e. $Y=$ $\beta_{0}+\beta_{1} X+\beta_{2} X^{2}+\beta_{3} X^{3}+\epsilon$
 
 a. Suppose that the true relationship between $X$ and $Y$ is linear, i.e. $Y=\beta_{0}+\beta_{1} X+\epsilon$. Consider the training residual sum of squares (RSS) for the linear regression, and also the training RSS for the cubic regression. Would we expect one to be lower than the other, would we expect them to be the same, or is there not enough information to tell? Justify your answer.
+
+It can be expected for the training RSS of the cubic regression to be higher than the linear regression because if the true relationship is linear, cubic regression would not do much or provide any significant information, but will still be higher than linear regression, which would follow the true regression line more closely.
+
 b. Answer a. using test rather than training RSS.
+
+The test population could potentially be less randomly skewed than training populous, so test RSS would also be higher for the cubic regression than linear regression perhaps even at a higher confidence.
+
 c. Suppose that the true relationship between $X$ and $Y$ is not linear, but we don't know how far it is from linear. Consider the training RSS for the linear regression, and also the training RSS for the cubic regression. Would we expect one to be lower than the other, would we expect them to be the same, or is there not enough information to tell? Justify your answer.
+
+In this case, the cubic regression would follow more closely to the true regression line, the RSS of cubic regression would be lower than that of linear regression
+
 d. Answer (c) using test rather than training RSS.
+
+Not enough information is provided here, as there are two potential outcomes that could come from test RSS, where cubic RSS would be lower because the true regression was closer, or linear RSS is lower because the true regression was closer.
 
 
 ## Question 3
@@ -41,7 +78,33 @@ d. Answer (c) using test rather than training RSS.
 Suppose we collect data for a group of students in a statistics class with variables $X_{1}=\text{hours studied}$, $X_{2}=\text{undergrad GPA}$, and $Y=\text{receive an A}$. We fit a logistic regression and produce estimated coefficient, $\hat{\beta}_{0}=-6, \hat{\beta}_{1}=0.05, \hat{\beta}_{2}=1$.
 
 a. Estimate the probability that a student who studies for $40\mathrm{h}$ and has an undergrad GPA of $3.5$ gets an A in the class.
+
+
+x1 = 40
+x2 = 3.5
+beta0 = -6
+beta1 = 0.05
+beta2 = 1
+
+eq =  e^t / (1 + e^t) or 1 / (1 + e^-t)
+
+eq = e^ (beta0 + beta1 * x1 + beta2 * x2) / 1 + e^ (beta0 + beta1 * x1 + beta2 * x2)
+eq = e^-0.5 / 1 + e^-0.5
+eq = 0.378
+
+
 b. How many hours would the student in part a. need to study to have a $50\%$ chance of getting an A in the class?
+
+
+0.5 < 1 / (1 + e^-t) -> t > 1 
+
+1 < -6 + 0.05 * h + 1 * 3.5 
+
+1 < -2.5 + 0.05h
+
+0.05h > 3.5
+
+h > 70 hrs
 
 
 ## Question 4
@@ -56,13 +119,33 @@ d. Do your results from c. make sense with your expectations?
 ```{r,warning=F,message=F}
 # make sure you have the DALEX package
 library(DALEX)
-
-# you should read the help page by running ?titanic
-# we can also peek at the data frame before using it
 str(titanic)
+titanic$survived = as.numeric(titanic$survived) - 1
 head(titanic)
 ```
 
+a. 
+```{r}
+glm.titanic = glm(survived ~ ., family = "binomial", data = titanic)
+summary(glm.titanic)
+```
+
+b.
+gender, age, and class seem to be most significant, thanks to the very low probabilities
+
+c.
+Because all three of the coefficients for gender, age and fare are negative, we can conclude that each are a decrease in log odds for survival, namely -2.800e+00 for gender, -3.953e-02 for age, and -1.155e-03 for fare
+
+```{r}
+exp(-2.800e+00) - 1
+exp(-3.953e-02) -1
+exp(-1.155e-03) -1
+```
+
+As seen in the results above, gender decreases odds of survival by 93.9%, age by 3.88%, and 0.12% for fare
+
+d.
+This is to be expected, as females and children were prioritized when deciding on the passengers of the limited emergency crafts aboard the Titanic, and although the poor had worse rooms and thus had a lesser chance of survival, it was not as critical of a determiner in who survived and who did not, as the emergency crafts were quite literally the only ways to survive. 
 
 ## Question 5
 
@@ -85,3 +168,41 @@ str(Carseats)
 head(Carseats)
 ```
 
+a. 
+```{r}
+pairs(Carseats[1:11])
+```
+
+
+
+c. 
+
+```{r}
+library(MASS)
+lmstrt = lm(Sales ~ 1, data = Carseats)
+lmend = lm(Sales ~ ., data = Carseats)
+lm.forward = stepAIC(lmstrt, direction = "forward", scope = list(upper = lmend, lower = lmstrt))
+summary(lm.forward)
+```
+
+d. 
+We see as a result of the stepwise, we can see that shelf location within the store (coefficient: 4.836 increase in mean sales per unit), price (coefficient: -0.095 increase in mean sales per unit), competitor pricing (coefficient: 0.092 increase in mean sales per unit), advertising budget (coefficient: 0.116 increase in mean sales per unit), populous age (coefficient: -0.046 increase in mean sales per unit), and community income (coefficient: 0.016 increase in mean sales per unit) are the most important predictors. 
+
+
+e. 
+```{r}
+confint(lm.forward, level = 0.9)
+```
+
+f. 
+```{r}
+library(lmvar)
+cv.lm(lm(formula(lm.forward), data = Carseats, x = T, y = T), k = 10)$MSE$mean
+```
+
+g. 
+```{r}
+par(mfrow = c(1,2))
+plot(lm.forward, whcih = 1:2)
+```
+For the most part, the residuals indicate only a few deviant points, otherwise, it seems to be in line with assumptions, although not perfect. Thus, it is an appropriate model to use. 

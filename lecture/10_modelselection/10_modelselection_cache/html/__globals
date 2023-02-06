@@ -1,0 +1,34 @@
+unnamed-chunk-1	~	library	list	lm	mtcars	stepAIC
+unnamed-chunk-2	lm.forward	summary
+unnamed-chunk-3	c	lm.forward	par	plot
+unnamed-chunk-4	list	lm1	lm2	stepAIC
+unnamed-chunk-5	lm.backward	summary
+unnamed-chunk-6	c	lm.backward	par	plot
+unnamed-chunk-7	mtcars	pairs
+unnamed-chunk-8	~	list	lm	mtcars	stepAIC
+unnamed-chunk-9	lm.both	summary
+unnamed-chunk-10	~	list	lm	mtcars	stepAIC
+unnamed-chunk-11	lm.both2	summary
+unnamed-chunk-12	c	lm.both2	par	plot
+unnamed-chunk-13	$	cv.lm	formula	library	lm	lm.backward	lm.both	lm.both2	lm.forward	mtcars	T
+unnamed-chunk-14	mtcars	names
+unnamed-chunk-15	~	c	library	lm.ridge	mtcars	plot
+unnamed-chunk-16	~	$	lm	mtcars
+unnamed-chunk-17	coef	head	ridge_models
+unnamed-chunk-18	^	$	lm_sanity_check	mean
+unnamed-chunk-19	^	$	lm_sanity_check	mean	mtcars	predict
+unnamed-chunk-20	lambda_vals	length
+unnamed-chunk-21	coef	ridge_models
+unnamed-chunk-22	cat	coef	lambda_vals	paste0	ridge_models
+unnamed-chunk-23	c	cbind	head	mtcars
+unnamed-chunk-24	coef	mtc_predictors	ridge_models	sum
+unnamed-chunk-25	coef	mtc_predictors	ridge_models	sum
+unnamed-chunk-26	datsun	lm_sanity_check	predict
+unnamed-chunk-27	dim	mtc_predictors
+unnamed-chunk-28	coef	dim	ridge_models
+unnamed-chunk-29	beta_matrix
+unnamed-chunk-30	as.matrix	cat	coef	dim	mtc_predictors	ridge_models	t
+unnamed-chunk-31	$	dim	mtcars	obs_by_lambda_predictions
+unnamed-chunk-32	^	apply	errors	mean
+unnamed-chunk-33	lambda_vals	log	plot	RSS_by_model
+unnamed-chunk-34	~	$	as.matrix	coef	cv.glmnet	glmnet	head	library	model.matrix	mtcars	plot	predict	str
